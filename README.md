@@ -4,21 +4,40 @@
 
 ---
 
-## 目录
+## 🚀 快速开始（5 分钟上手）
 
-1. [项目结构](#项目结构)
-2. [流程总览](#流程总览)
-3. [环境要求](#环境要求)
-4. [Step 1: 数据准备](#step-1-数据准备)
-5. [Step 2: LoRA 微调训练](#step-2-lora-微调训练)
-6. [Step 3: 启动 Web 聊天服务](#step-3-启动-web-聊天服务)
-7. [辅助工具](#辅助工具)
-8. [文件说明](#文件说明)
-9. [注意事项](#注意事项)
+```bash
+# 1. 克隆仓库
+git clone git@github.com:Jared-Linn/generative-qa-class.git
+cd generative-qa-class
+
+# 2. 一键部署（自动下载模型 + 安装依赖 + 启动服务）
+双击 start.bat
+```
+
+**或者手动一步步来：**
+
+```bash
+# 1. 安装依赖
+pip install torch transformers datasets peft accelerate fastapi uvicorn jinja2
+
+# 2. 下载模型（1.7GB，国内用镜像加速）
+set HF_ENDPOINT=https://hf-mirror.com
+hf download Qwen/Qwen3.5-0.8B --local-dir Qwen3.5-0.8B
+
+# 3. （可选）用示例数据快速微调，约 3-5 分钟
+python multi_turn_finetune_qwen_cpu.py
+
+# 4. 启动聊天服务
+python multi_turn_app.py
+# → 浏览器打开 http://localhost:8000
+```
+
+> 💡 **start.bat 会自动处理以上所有步骤**，首次运行会自动下载模型，之后秒开。
 
 ---
 
-## 项目结构
+## 目录
 
 ```
 generative_qa_class/
