@@ -63,7 +63,7 @@ model = AutoModelForCausalLM.from_pretrained(
     attn_implementation="eager",               # 强制使用 eager attention，避免 Windows 下的 bug
 )
 # 二次保险：逐参数强制转换为 FP32
-model = model.to("float")
+model = model.float()
 for param in model.parameters():
     param.data = param.data.to(torch.float32)
 print("模型加载完成（已转换为 FP32）")
@@ -87,7 +87,7 @@ lora_config = LoraConfig(
     r=LORA_R,
     lora_alpha=LORA_ALPHA,
     lora_dropout=LORA_DROPOUT,
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    target_modules=["in_proj_qkv", "out_proj", "gate_proj", "up_proj", "down_proj"],
     bias="none",
 )
 model = get_peft_model(model, lora_config)
@@ -200,7 +200,7 @@ training_args = TrainingArguments(
     save_total_limit=2,
     prediction_loss_only=True,
     report_to="none",
-    data_loader_num_workers=0,      # Windows 下避免多进程问题
+    dataloader_num_workers=0,      # Windows 下避免多进程问题
     remove_unused_columns=False,    # 必须为 False，因为手动添加了 "labels" 列
     use_cpu=True,
     fp16=False,

@@ -185,7 +185,8 @@ python multi_turn_finetune_qwen_cpu.py
 - **强制 FP32 精度**：避免 CPU 上 bf16/f16 支持问题
 - **Eager attention**：避免 Windows 下 attention 实现兼容性问题
 - **Label 掩码**：仅 assistant 回复参与 loss 计算，用户输入和 system prompt 被忽略
-- **LoRA 目标模块**：`q_proj`, `k_proj`, `v_proj`, `o_proj`
+- **LoRA 目标模块**：`in_proj_qkv`, `out_proj`, `gate_proj`, `up_proj`, `down_proj`
+  > Qwen3.5 采用 Gated DeltaNet 线性注意力架构，无标准 q/k/v/o 投影
 
 ### 输出
 
@@ -199,14 +200,18 @@ python multi_turn_finetune_qwen_cpu.py
 
 ### 训练监控
 
-训练过程中会实时打印 loss：
+训练过程中会实时打印 loss 变化。
+
+### 实测结果（CPU 训练，5 条数据 × 3 epochs）
 
 ```
-Step    0 | Loss: 2.3456
-Step    5 | Loss: 1.2345
-Step   10 | Loss: 0.9876
-...
+Step    1 | Loss: 3.3117
+Step    5 | Loss: 3.0944
+train_loss: 3.0254
+训练耗时: 209s（约 3.5 分钟）
 ```
+
+> ⚠️ **注意**：5 条训练数据仅供跑通流程，实际微调建议准备 **数百到上千条** 数据。
 
 ---
 
@@ -302,7 +307,7 @@ python CUDA.py
 ```python
 from model_loader import model_loader
 
-model, tokenizer = model_loader.load_model("D:/dataset/model/Qwen3.5-0.8B")
+model, tokenizer = model_loader.load_model("E:/work/Claude code default/generative_qa_class/Qwen3.5-0.8B")
 ```
 
 特点：
@@ -327,43 +332,53 @@ model, tokenizer = model_loader.load_model("D:/dataset/model/Qwen3.5-0.8B")
 
 ## 注意事项
 
-### 1. 模型路径
+### 1. 数据格式
 
-脚本中的模型路径均硬编码为 `D:\dataset\model\Qwen3.5-0.8B`，如需修改请编辑：
+训练数据要求 **JSONL 格式**（每行一个完整 JSON 对象），`text` 字段包含 ChatML 格式的多轮对话：
 
-- `multi_turn_finetune_qwen_cpu.py` 第 31 行：`MODEL_PATH`
-- `multi_turn_app.py` 第 31 行：`BASE_MODEL_PATH`
+```json
+{"text": "<|im_start|>system\\n...<|im_end|>\\n<|im_start|>user\\n...<|im_end|>\\n..."}
+```
 
-### 2. transformers 版本兼容性
+JSON 对象不能跨多行（pretty-print 格式会导致 `load_dataset("json")` 解析失败）。
 
-**transformers ≥ 5.x** 对路径的处理方式发生了变化：
-- Windows 绝对路径（如 `D:\path`）会被误判为 HuggingFace repo_id
-- 需要通过 `local_files_only=True` + `token` 参数规避，或降级到 transformers 4.x
+### 2. Qwen3.5 架构差异
 
-如遇 `Repo id must use alphanumeric chars` 错误，可尝试：
+Qwen3.5 使用 **Gated DeltaNet 线性注意力**，与传统 Transformer 不同：
+
+| 传统架构 | Qwen3.5 |
+|---------|---------|
+| `q_proj`, `k_proj`, `v_proj`, `o_proj` | `in_proj_qkv`, `out_proj` |
+| 标准 MLP | `gate_proj`, `up_proj`, `down_proj` |
+
+LoRA 的 `target_modules` 需相应调整（已在本项目中修正）。
+
+### 3. transformers 版本兼容性
+
+本项目在 **transformers 5.11.0** 下测试通过。已知变化：
+
+- `data_loader_num_workers` → `dataloader_num_workers`
+- `torch_dtype` → `dtype`（仍兼容旧写法）
+- `model.to("float")` → `model.float()`
+
+### 4. Windows 编码问题
+
+Windows 终端默认 GBK 编码，脚本中的 emoji 字符可能报错。
+运行时加 `-X utf8` 参数解决：
 
 ```bash
-pip install "transformers<5.0"
+python -X utf8 multi_turn_finetune_qwen_cpu.py
+python -X utf8 multi_turn_app.py
 ```
 
-### 3. Windows 编码问题
+### 5. 训练数据量
 
-`CUDA.py` 中的 emoji 字符可能在某些 Windows 终端（GBK 编码）下报错。
-可在脚本顶部添加环境变量解决：
+当前 `data/multi_turn_qa.json` 仅包含 **5 条心理咨询多轮对话**（每条约 5 轮对话）。
+仅供跑通流程验证，实际微调建议准备 **数百到上千条** 数据。
 
-```python
-import io, sys
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-```
+原始数据准备脚本 `multi_turn_prepare_data.py` 需要输入文件 `jiandanxinli_qa_data_v1.0.json`，该文件未包含在本仓库中。
 
-### 4. 原始数据文件
-
-数据准备脚本需要 `jiandanxinli_qa_data_v1.0.json` 文件。该文件未包含在本仓库中。
-如需使用，可将文件放入项目根目录后运行 `multi_turn_prepare_data.py`。
-
-`data/class_work/multi_turn_qa.json` 是已预处理好的 16 条样例数据，可直接用于训练。
-
-### 5. 模型加载策略
+### 6. Web 服务 Worker 数
 
 `multi_turn_app.py` 采用**启动前加载模型**策略：
 1. 在 FastAPI 启动前先加载模型
