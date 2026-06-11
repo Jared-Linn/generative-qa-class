@@ -7,3 +7,4 @@ __pycache__/
 venv/
 outputs_multi_turn/
 checkpoints/
+Qwen3.5-0.8B/

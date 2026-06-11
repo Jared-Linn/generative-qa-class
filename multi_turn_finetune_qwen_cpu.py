@@ -28,7 +28,7 @@ from peft import LoraConfig, get_peft_model, TaskType
 # =============================================================================
 # 超参数配置（集中管理，方便修改）
 # =============================================================================
-MODEL_PATH = r"D:\dataset\model\Qwen3.5-0.8B"   # 基础模型路径
+MODEL_PATH = r"E:\work\Claude code default\generative_qa_class\Qwen3.5-0.8B"   # 基础模型路径
 OUTPUT_DIR = r"./outputs_multi_turn"           # 训练输出目录
 DATA_PATH = r"./data/multi_turn_qa.json"       # 训练数据路径（JSON 格式）
 MAX_SEQ_LENGTH = 1024                          # 最大序列长度

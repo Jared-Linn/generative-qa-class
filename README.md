@@ -87,24 +87,23 @@ pip install fastapi uvicorn jinja2
 
 ### 预训练模型
 
-需要下载 **Qwen3.5-0.8B** 模型权重到本地，例如：
+**Qwen3.5-0.8B** 模型权重已下载到项目目录下：
 
 ```
-D:\dataset\model\Qwen3.5-0.8B\
-├── config.json
-├── tokenizer.json
-├── model.safetensors
-└── ...
+generative_qa_class/
+└── Qwen3.5-0.8B/
+    ├── config.json
+    ├── tokenizer.json
+    ├── model.safetensors    (1.7GB)
+    └── ...
 ```
 
-模型可手动从 HuggingFace 下载，或使用：
+如需重新下载，可使用国内镜像加速：
 
 ```bash
-# 从 HuggingFace Hub 下载到本地
-huggingface-cli download Qwen/Qwen3.5-0.8B --local-dir D:\dataset\model\Qwen3.5-0.8B
+export HF_ENDPOINT=https://hf-mirror.com
+hf download Qwen/Qwen3.5-0.8B --local-dir Qwen3.5-0.8B
 ```
-
-> ⚠️ **注意**：模型路径在脚本中硬编码为 `D:\dataset\model\Qwen3.5-0.8B`，如需修改请编辑脚本中的 `MODEL_PATH` / `BASE_MODEL_PATH` 变量。
 
 ---
 

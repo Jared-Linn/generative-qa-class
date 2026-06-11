@@ -28,7 +28,7 @@ import multiprocessing
 
 # ==================== 配置参数 ====================
 # 模型路径配置
-BASE_MODEL_PATH = r"D:\dataset\model\Qwen3.5-0.8B"  # 基础预训练模型路径
+BASE_MODEL_PATH = r"E:\work\Claude code default\generative_qa_class\Qwen3.5-0.8B"  # 基础预训练模型路径
 LORA_PATH = "./outputs_multi_turn/lora_adapter"  # LoRA 微调适配器路径
 
 # 文本生成参数配置
