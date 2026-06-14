@@ -4,6 +4,22 @@
 
 ---
 
+## 📸 项目一览
+
+| 系统架构 | ChatML 数据格式 |
+|:---:|:---:|
+| ![架构图](docs/images/architecture.png) | ![ChatML格式](docs/images/chatml_format.png) |
+
+| LoRA 微调原理 | Loss 下降曲线 |
+|:---:|:---:|
+| ![LoRA原理](docs/images/lora_diagram.png) | ![Loss曲线](docs/images/loss_curve.png) |
+
+| Web 聊天界面 |
+|:---:|
+| ![Web界面](docs/images/web_ui.png) |
+
+---
+
 ## 🚀 快速开始（5 分钟上手）
 
 ```bash
@@ -37,96 +53,58 @@ python multi_turn_app.py
 
 ---
 
-## 目录
+## 📁 目录结构
 
 ```
 generative_qa_class/
+├── docs/images/                  # 架构图、原理图等文档图片
+│   ├── architecture.png          # 系统架构流程图
+│   ├── chatml_format.png         # ChatML 格式示意图
+│   ├── lora_diagram.png          # LoRA 微调原理图
+│   ├── loss_curve.png            # 训练 Loss 下降曲线
+│   └── web_ui.png                # 聊天界面预览
+│
 ├── multi_turn_prepare_data.py    # 数据准备：原始心理咨询数据 → ChatML 格式
 ├── multi_turn_finetune_qwen_cpu.py  # LoRA 微调训练脚本（CPU 环境）
 ├── multi_turn_app.py             # FastAPI Web 聊天服务
 ├── model_loader.py               # 单例模式模型加载器
 ├── CUDA.py                       # GPU 检测 + PyTorch 安装建议
+├── prepare_faq_data.py           # FAQ 数据生成辅助脚本
+│
 ├── data/
 │   ├── multi_turn_qa.json        # 训练数据（ChatML 格式）
 │   └── class_work/               # 预处理好的样例数据
+│
 ├── templates/
 │   └── index.html                # 聊天前端页面
+│
 ├── outputs_multi_turn/           # 训练输出目录（运行时生成）
 │   └── lora_adapter/             # LoRA 适配器权重
-└── data/multi_turn_qa.json       # 训练数据文件
+│
+├── Qwen3.5-0.8B/                 # 预训练模型权重（需下载）
+├── start.bat                     # 一键部署启动脚本
+└── requirements.txt              # Python 依赖
 ```
 
 ---
 
-## 流程总览
+## 🔄 流程总览
 
 ```
-原始心理咨询数据                        用户
-     │                                    │
-     ▼                                    │
- 数据准备 ──► ChatML 格式 ──► LoRA 微调 ──┤
-(multi_turn_prepare_data.py)   (multi_turn_finetune_qwen_cpu.py)
-                                          │
-                                          ▼
-                                     Web 聊天服务 ──► 浏览器
-                                    (multi_turn_app.py)
-```
-
----
-
-## 环境要求
-
-### 硬件
-
-| 阶段 | 推荐配置 |
-|------|---------|
-| 数据准备 | 任意机器 |
-| 微调训练 | CPU 16GB+ 内存（训练时约占用 8-12GB） |
-| Web 推理 | CPU 8GB+ 内存（模型加载后约占用 4-6GB） |
-
-### 软件依赖
-
-```bash
-pip install torch transformers datasets peft accelerate
-pip install fastapi uvicorn jinja2
-```
-
-本项目已测试的依赖版本：
-
-| 包 | 版本 |
-|---|------|
-| Python | 3.10+ |
-| torch | 2.12.0 |
-| transformers | 5.11.0 |
-| datasets | 5.0.0 |
-| peft | 0.19.1 |
-| accelerate | 1.13.0 |
-| fastapi | 0.136.3 |
-| uvicorn | 0.49.0 |
-
-### 预训练模型
-
-**Qwen3.5-0.8B** 模型权重已下载到项目目录下：
-
-```
-generative_qa_class/
-└── Qwen3.5-0.8B/
-    ├── config.json
-    ├── tokenizer.json
-    ├── model.safetensors    (1.7GB)
-    └── ...
-```
-
-如需重新下载，可使用国内镜像加速：
-
-```bash
-export HF_ENDPOINT=https://hf-mirror.com
-hf download Qwen/Qwen3.5-0.8B --local-dir Qwen3.5-0.8B
+心理咨询原始数据                                      用户
+     │                                                   │
+     ▼                                                   │
+  [1] 数据准备 ──► [2] ChatML 格式 ──► [3] LoRA 微调 ───┤
+  (multi_turn_prepare_data.py)   (multi_turn_finetune_qwen_cpu.py)
+                                                         │
+                                                         ▼
+                                              [4] Web 聊天服务 ──► 浏览器
+                                              (multi_turn_app.py)
 ```
 
 ---
 
-## Step 1: 数据准备
+## ⚙️ Step 1: 数据准备
 
 将心理咨询原始 JSON 数据转换为 Qwen ChatML 格式。
 
@@ -137,7 +115,6 @@ hf download Qwen/Qwen3.5-0.8B --local-dir Qwen3.5-0.8B
 ### 运行
 
 ```bash
-cd generative_qa_class
 python multi_turn_prepare_data.py
 ```
 
@@ -175,14 +152,13 @@ python multi_turn_prepare_data.py
 
 ---
 
-## Step 2: LoRA 微调训练
+## ⚙️ Step 2: LoRA 微调训练
 
 在 CPU 上对 Qwen3.5-0.8B 进行多轮对话 LoRA 微调。
 
 ### 运行
 
 ```bash
-cd generative_qa_class
 python multi_turn_finetune_qwen_cpu.py
 ```
 
@@ -217,10 +193,6 @@ python multi_turn_finetune_qwen_cpu.py
     └── tokenizer.json
 ```
 
-### 训练监控
-
-训练过程中会实时打印 loss 变化。
-
 ### 实测结果（CPU 训练，5 条数据 × 3 epochs）
 
 ```
@@ -230,18 +202,19 @@ train_loss: 3.0254
 训练耗时: 209s（约 3.5 分钟）
 ```
 
+![Loss下降曲线](docs/images/loss_curve.png)
+
 > ⚠️ **注意**：5 条训练数据仅供跑通流程，实际微调建议准备 **数百到上千条** 数据。
 
 ---
 
-## Step 3: 启动 Web 聊天服务
+## ⚙️ Step 3: 启动 Web 聊天服务
 
 基于 FastAPI 的多轮对话 Web 应用，支持多会话管理、System Prompt 自定义。
 
 ### 启动
 
 ```bash
-cd generative_qa_class
 python multi_turn_app.py
 ```
 
@@ -306,7 +279,7 @@ curl -X POST http://localhost:8000/api/chat \
 
 ---
 
-## 辅助工具
+## 🛠 辅助工具
 
 ### CUDA.py — GPU 检测与 PyTorch 安装建议
 
@@ -326,7 +299,7 @@ python CUDA.py
 ```python
 from model_loader import model_loader
 
-model, tokenizer = model_loader.load_model("E:/work/Claude code default/generative_qa_class/Qwen3.5-0.8B")
+model, tokenizer = model_loader.load_model("path/to/Qwen3.5-0.8B")
 ```
 
 特点：
@@ -336,20 +309,21 @@ model, tokenizer = model_loader.load_model("E:/work/Claude code default/generati
 
 ---
 
-## 文件说明
+## 📄 文件职责一览
 
-| 文件 | 行数 | 职责 | 输入 | 输出 |
-|------|------|------|------|------|
-| `multi_turn_prepare_data.py` | ~292 | 原始数据 → ChatML | `jiandanxinli_qa_data_v1.0.json` | `data/multi_turn_qa.json` |
-| `multi_turn_finetune_qwen_cpu.py` | ~267 | LoRA 微调训练 | 基础模型 + ChatML 数据 | `outputs_multi_turn/lora_adapter/` |
-| `multi_turn_app.py` | ~494 | FastAPI Web 服务 | 基础模型 + LoRA 适配器 | HTTP 聊天接口 |
-| `model_loader.py` | ~64 | 单例模型管理 | 模型路径 | `model`, `tokenizer` 实例 |
-| `CUDA.py` | ~302 | GPU 检测工具 | 无 | GPU 信息 + 安装建议 |
-| `templates/index.html` | ~748 | 聊天前端 UI | 无 | HTML 聊天页面 |
+| 文件 | 职责 | 输入 | 输出 |
+|------|------|------|------|
+| `multi_turn_prepare_data.py` | 原始数据 → ChatML | `jiandanxinli_qa_data_v1.0.json` | `data/multi_turn_qa.json` |
+| `multi_turn_finetune_qwen_cpu.py` | LoRA 微调训练 | 基础模型 + ChatML 数据 | `outputs_multi_turn/lora_adapter/` |
+| `multi_turn_app.py` | FastAPI Web 服务 | 基础模型 + LoRA 适配器 | HTTP 聊天接口 |
+| `model_loader.py` | 单例模型管理 | 模型路径 | `model`, `tokenizer` 实例 |
+| `CUDA.py` | GPU 检测工具 | 无 | GPU 信息 + 安装建议 |
+| `prepare_faq_data.py` | FAQ → ChatML 数据 | `faq_expanded.json` | `data/multi_turn_qa.json` |
+| `templates/index.html` | 聊天前端 UI | 无 | HTML 聊天页面 |
 
 ---
 
-## 注意事项
+## ⚠️ 注意事项
 
 ### 1. 数据格式
 
@@ -404,12 +378,39 @@ python -X utf8 multi_turn_app.py
 2. 模型加载失败则整个服务不启动
 3. 确保服务启动后请求不会因模型加载而超时
 
-这种设计保证了服务稳定性，但增加了启动时间（约 30-60 秒）。
-
-### 6. Web 服务 Worker 数
-
+**Worker 数必须为 1：**
 ```python
-uvicorn.run("multi_turn_app:app", workers=1)  # 必须为 1
+uvicorn.run("multi_turn_app:app", workers=1)  # 模型只有一份实例
 ```
 
-模型只有一份实例在内存中，多 worker 会导致重复加载，因此 `workers` 必须设为 1。
+---
+
+## 📦 环境要求
+
+### 硬件
+
+| 阶段 | 推荐配置 |
+|------|---------|
+| 数据准备 | 任意机器 |
+| 微调训练 | CPU 16GB+ 内存（训练时约占用 8-12GB） |
+| Web 推理 | CPU 8GB+ 内存（模型加载后约占用 4-6GB） |
+
+### 软件依赖
+
+```bash
+pip install torch transformers datasets peft accelerate
+pip install fastapi uvicorn jinja2
+```
+
+本项目已测试的依赖版本：
+
+| 包 | 版本 |
+|---|------|
+| Python | 3.10+ |
+| torch | 2.12.0 |
+| transformers | 5.11.0 |
+| datasets | 5.0.0 |
+| peft | 0.19.1 |
+| accelerate | 1.13.0 |
+| fastapi | 0.136.3 |
+| uvicorn | 0.49.0 |
